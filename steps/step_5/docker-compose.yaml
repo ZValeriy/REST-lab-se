@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+  mock-server:
+    image: stoplight/prism:4
+    command: mock -h 0.0.0.0 /openapi.yaml
+    volumes:
+      - ./openapi.yaml:/openapi.yaml
+    ports:
+      - "8080:4010"

@@ -1,0 +1,236 @@
+openapi: 3.0.3
+info:
+  title: Clients API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+security:
+  - basicAuth: []
+tags:
+  - name: Clients
+    description: Операции с клиентами
+paths:
+  /clients:
+    get:
+      summary: Получение списка клиентов по заданным фильтрам
+      tags:
+        - Clients
+      parameters:
+        - name: created_at_from
+          description: Дата регистрации больше или равна параметру. (должна быть <= created_at_to)
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: created_at_to
+          description: Дата регистрации меньше или равна параметру. (должна быть >= created_at_from)
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                maxItems: 100
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/Client'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - Clients
+      summary: Создание нового клиента
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '201':
+          description: Клиент успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Ошибка валидации входных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalid_login:
+                  value:
+                    title: "Validation Error"
+                    details: "Поле `login` не должно быть пустым"
+                    errors:
+                      login: ["must not be empty"]
+                      phone_number: ["does not match pattern +7XXXXXXXXXX"]
+        '409':
+          description: Конфликт — логин или email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized — требуется авторизация
+  /clients/{client_id}:
+    parameters:
+      - name: client_id
+        in: path
+        schema: 
+          type: integer
+          description: Идентификатор клиента
+        required: true
+    get:
+      tags:
+        - Clients
+      summary: Получение информации о клиенте по его идентификатору
+      responses:
+        '200':
+          description: Успешное получение информации о клиенте
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ClientExtended'
+components:
+  schemas:
+    Client:
+      type: object
+      required:
+        - id
+        - login
+        - status
+        - created_at
+      properties:
+        id:
+          description: "Идентификатор пользователя во внутренней системе"
+          type: integer
+          minimum: 0
+          example: 1233998
+        login:
+          description: "Логин клиента, с которым он зарегистрировался на сайте"
+          type: string
+          example: Ivanov93
+        status:
+          type: string
+          enum: [new, heavy, light]
+          description: "Статус личного кабинета пользователя"
+        created_at:
+          type: string
+          format: date
+          description: "Дата регистрации пользователя"
+        phone_number:
+          type: string 
+          pattern: '^\\+7\\d{10}$'
+          example: "+79161234567"
+          description: "Номер телефона в формате +7XXXXXXXXXX"
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 120
+          description: "Общее количество элементов в коллекции"
+        page:
+          type: integer
+          example: 2
+          description: "Страница, на которой сейчас находится пользователь"
+        size:
+          type: integer
+          example: 20
+          description: "Количество элементов на странице"
+        pages:
+          type: integer
+          example: 6
+          description: "Общее количество страниц"
+    ClientsWithPagination:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+    ClientExtended:
+      allOf:
+      - $ref: '#/components/schemas/Client'
+      - type: object
+        properties:
+          updated_at:
+            type: string
+            format: date-time
+            description: "Дата последнего обновления профиля"
+            example: "2023-10-01T16:00:00Z"
+          full_name:
+            type: string
+            description: "ФИО клиента"
+            example: "Иванов Иван Иванович"
+          birth_date:
+            type: string
+            format: date
+            description: "Дата рождения"
+            example: "1993-05-17"
+          gender:
+            type: string
+            enum: [male, female, other]
+            example: "male"
+            description: "Пол клиента"
+          loyalty_level:
+            type: string
+            enum: [bronze, silver, gold, platinum]
+            description: "Уровень лояльности"
+            example: "silver"
+          last_login_at:
+            type: string
+            format: date-time
+            example: "2023-10-01T18:00:00Z"
+            description: "Дата последнего входа"
+          preferences:
+            type: object
+            description: "Настройки клиента"
+            properties:
+              language:
+                type: string
+                example: "ru"
+              notifications:
+                type: boolean
+                example: true
+          tags:
+            type: array
+            items:
+              type: string
+            description: "Метки клиента"
+            example: ["test_group", "vip"]
+    ProblemDetails:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: "Краткий заголовок проблемы"
+          example: "Validation Error"
+        details:
+          type: string 
+          description: "Детальное описание проблемы для отображения"
+        errors:
+          type: object
+          description: "Дополнительные детали ошибок по полям"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
