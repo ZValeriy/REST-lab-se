@@ -20,8 +20,8 @@
 5. Сверьтесь с примерами и справочными материалами ниже.
 
 ## Примеры и справка
-- Пример: `steps/step_1/description/openAPI_example.yaml`
-- Краткая справка по OpenAPI-компонентам и примеры: `steps/step_1/description/openAPI_description.md`
+- Пример: [openAPI_example.yaml](./openAPI_example.yaml)
+- Краткая справка по OpenAPI-компонентам и примеры: [openAPI_description.md](./openAPI_description.md)
 
 ## Подсказки
 - Продумывайте фильтры и пагинацию там, где это уместно.
@@ -34,4 +34,3 @@
 - Чем отличаются `oneOf`, `anyOf` и `allOf`?
 - Какие поля лучше делать обязательными в ваших схемах и почему?
 - Как вы проверите спецификацию на корректность до запуска сервиса?
-

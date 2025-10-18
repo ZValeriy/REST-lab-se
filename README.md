@@ -27,8 +27,8 @@ LLM-инструменты (ChatGPT, DeepSeek и аналоги) использ�
 Склонируйте репозиторий: https://github.com/ZValeriy/REST-lab-se
 
 ### [Шаг 1. Проектирование API в OpenAPI](./steps/step_1/description/openAPI.md)
-- Пример: `steps/step_1/description/openAPI_example.yaml`
-- Справка по компонентам: `steps/step_1/description/openAPI_description.md`
+- Пример: [openAPI_example.yaml](./steps/step_1/description/openAPI_example.yaml)
+- Справка по компонентам: [openAPI_description.md](./steps/step_1/description/openAPI_description.md)
 
 ### [Шаг 2. Поднятие mock-сервера (Prism)](./steps/step_2/description/prism.md)
 
@@ -45,4 +45,3 @@ LLM-инструменты (ChatGPT, DeepSeek и аналоги) использ�
 - Как использовать LLM для ускорения разработки?
 - Какие риски связаны с breaking changes?
 - Что такое спецификация OpenAPI и как она помогает разработчику?
-
