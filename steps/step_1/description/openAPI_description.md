@@ -33,7 +33,7 @@ components:     # переиспользуемые элементы
   securitySchemes: {}   # схемы авторизации
 ```
 В интерфейсе API будет выглядеть вот так:
-![api example](./openAPI.png)
+![api example](../openAPI.png)
 ## Блок components
 ### schemas
 Schema – модель объекта. Используется для описания структуры входных и выходных данных. Ниже описана схема для Клиента.
@@ -164,7 +164,7 @@ ClientExtended:
         example: ["test_group", "vip"]
 ```
 В интерфейсе это выглядит так:
-![ClientExtended](./openAPI_client.png)
+![ClientExtended](../openAPI_client.png)
 
 ### parameters
 Переиспользуемые параметры (заголовки, параметры запроса и пути). Могут переиспользоваться в paths, methods или на уровне всего пути.
@@ -254,3 +254,4 @@ externalDocs:
 
 ## Пример
 Посмотреть на пример описания нескольких методов можно в [файле](openAPI_example.yaml)
+

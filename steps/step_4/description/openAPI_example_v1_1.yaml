@@ -1,0 +1,351 @@
+openapi: 3.0.3
+info:
+  title: Clients API
+  version: 1.1.0
+servers:
+  - url: http://localhost:8000
+security:
+  - basicAuth: []
+tags:
+  - name: Clients
+    description: Операции с клиентами
+x-json-schema-faker:
+  locale: ru
+  min-items: 2
+  max-items: 10
+  optionalsProbability: 0.5
+paths:
+  /clients:
+    get:
+      summary: Получение списка клиентов по заданным фильтрам
+      tags:
+        - Clients
+      parameters:
+        - name: created_at_from
+          description: Дата регистрации больше или равна параметру. (должна быть <= created_at_to)
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: created_at_to
+          description: Дата регистрации меньше или равна параметру. (должна быть >= created_at_from)
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                maxItems: 100
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/Client'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - Clients
+      summary: Создание нового клиента
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Client'
+                - $ref: '#/components/schemas/ClientWithReferral'
+      responses:
+        '201':
+          description: Клиент успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Ошибка валидации входных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalid_login:
+                  value:
+                    title: "Validation Error"
+                    details: "Поле `login` не должно быть пустым"
+                    errors:
+                      login: ["must not be empty"]
+                      phone_number: ["does not match pattern +7XXXXXXXXXX"]
+        '409':
+          description: Конфликт — логин или email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized — требуется авторизация
+  /clients/{client_id}:
+    parameters:
+      - name: client_id
+        in: path
+        schema: 
+          type: integer
+          description: Идентификатор клиента
+        required: true
+    get:
+      tags:
+        - Clients
+      summary: Получение информации о клиенте по его идентификатору
+      responses:
+        '200':
+          description: Успешное получение информации о клиенте
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ClientExtended'
+              examples:
+                basicClient:
+                  summary: Basic client example
+                  value:
+                    id: "c12345"
+                    name: "Иван Петров"
+                    email: "ivan.petrov@example.com"
+                    phone: "+7-900-123-45-67"
+                    status: "active"
+                    registrationDate: "2023-11-15"
+                    loyalty:
+                      tier: "standard"
+                      points: 120
+                      cashbackRate: 0.03
+                    preferences:
+                      notifications: true
+                      preferredChannel: "email"
+                vipClient:
+                  summary: VIP client example
+                  value:
+                    id: "c98765"
+                    name: "Ольга Смирнова"
+                    email: "olga.smirnova@example.com"
+                    phone: "+7-916-555-22-33"
+                    status: "vip"
+                    registrationDate: "2020-02-10"
+                    loyalty:
+                      tier: "gold"
+                      points: 8450
+                      cashbackRate: 0.1
+                    preferences:
+                      notifications: true
+                      preferredChannel: "personal_manager"
+                      vipSupport: true
+components:
+  schemas:
+    Client:
+      type: object
+      required:
+        - id
+        - login
+        - status
+        - created_at
+      properties:
+        id:
+          description: "Идентификатор пользователя во внутренней системе"
+          type: integer
+          minimum: 1
+          maximum: 9999999
+          example: 1233998
+          x-faker: number.int
+        login:
+          description: "Логин клиента, с которым он зарегистрировался на сайте"
+          type: string
+          minLength: 5
+          maxLength: 20
+          example: Ivanov93
+          x-faker: internet.userName
+        status:
+          type: string
+          enum: [new, heavy, light]
+          description: "Статус личного кабинета пользователя"
+          x-faker:
+            random_element:
+              elements: ["new", "heavy", "light"]
+        created_at:
+          type: string
+          format: date
+          description: "Дата регистрации пользователя"
+          example: "2023-05-17"
+          x-faker: date.past
+        phone_number:
+          type: string
+          pattern: '^\\+7\\d{10}$'
+          example: "+79161234567"
+          description: "Номер телефона в формате +7XXXXXXXXXX"
+          x-faker: 
+            phone.phoneNumber:
+              - '+79#########'
+    ClientExtended:
+      allOf:
+      - $ref: '#/components/schemas/Client'
+      - type: object
+        properties:
+          updated_at:
+            type: string
+            format: date-time
+            description: "Дата последнего обновления профиля"
+            example: "2023-10-01T16:00:00Z"
+            x-faker: date.recent
+          full_name:
+            type: string
+            description: "ФИО клиента"
+            example: "Иванов Иван Иванович"
+            x-faker: name.findName
+          birth_date:
+            type: string
+            format: date
+            description: "Дата рождения"
+            example: "1993-05-17"
+            x-faker: date_of_birth
+          gender:
+            type: string
+            enum: [male, female, other]
+            example: "male"
+            description: "Пол клиента"
+            x-faker:
+              random_element:
+                elements: ["male", "female"]
+          loyalty_level:
+            type: string
+            enum: [bronze, silver, gold, platinum]
+            description: "Уровень лояльности"
+            example: "silver"
+            x-faker:
+              random_element:
+                elements: ["bronze", "silver", "gold", "platinum"]
+          last_login_at:
+            type: string
+            format: date-time
+            example: "2023-10-01T18:00:00Z"
+            description: "Дата последнего входа"
+            x-faker: date.recent
+          preferences:
+            type: object
+            description: "Настройки клиента"
+            properties:
+              language:
+                type: string
+                enum: [ru, en]
+                example: "ru"
+                x-faker:
+                  random_element:
+                    elements: ["ru", "en"]
+              notifications:
+                type: boolean
+                example: true
+                x-faker: datatype.boolean
+          tags:
+            type: array
+            items:
+              type: string
+              x-faker: internet.color
+            description: "Метки клиента"
+            example: ["test_group", "vip"]
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 120
+          description: "Общее количество элементов в коллекции"
+        page:
+          type: integer
+          example: 2
+          description: "Страница, на которой сейчас находится пользователь"
+        size:
+          type: integer
+          example: 20
+          description: "Количество элементов на странице"
+        pages:
+          type: integer
+          example: 6
+          description: "Общее количество страниц"
+    ClientsWithPagination:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+    ProblemDetails:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: "Краткий заголовок проблемы"
+          example: "Validation Error"
+        details:
+          type: string 
+          description: "Детальное описание проблемы для отображения"
+        errors:
+          type: object
+          description: "Дополнительные детали ошибок по полям"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    ClientWithReferral:
+      allOf:
+        - $ref: '#/components/schemas/Client'
+        - type: object
+          properties:
+            referral_code:
+              type: string
+              description: Реферальный код (опционально)
+              example: REF123456
+    ClientV2:
+      type: object
+      required:
+        - login
+        - email
+        - status
+        - registration_date
+      properties:
+        login:
+          type: string
+          minLength: 5
+          maxLength: 30
+          example: NewUser2025
+        email:
+          type: string
+          format: email
+          example: new.user@example.com
+        status:
+          type: string
+          enum: [new, active, suspended]
+        registration_date:
+          type: string
+          format: date
+        phone_number:
+          type: string
+          pattern: '^\\+7\\d{10}$'
+          example: "+79998887766"
+        preferences:
+          type: object
+          properties:
+            language:
+              type: string
+              enum: [ru, en]
+              example: ru
+            marketing_consent:
+              type: boolean
+              default: false
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
